@@ -1,3 +1,10 @@
+
+/**
+ * @file Main server file
+ * @description Initializes Express app, middleware and routes
+ */
+
+
 const express = require('express');
 const app = express();
 
@@ -17,7 +24,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// users routes (חיבור ראשוני - גם אם עדיין לא מימשת הכל)
+// users routes 
 const usersRoutes = require('./routes/usersRoutes');
 app.use('/users', usersRoutes);
 
