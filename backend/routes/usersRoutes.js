@@ -8,16 +8,21 @@ const usersController = require('../controllers/usersController');
  */
 router.get('/', usersController.getAllUsers);
 
-/**
- * @route GET /users/:id
- * @desc Get user by ID
- */
-router.get('/:id', usersController.getUserById);
+
 
 /**
  * @route POST /users
  * @desc Create new user
  */
 router.post('/', usersController.createUser);
+
+router.put('/:id',usersController.updateUser);
+router.delete('/:id',usersController.deleteUser);
+
+/**
+ * @route GET /users/:id
+ * @desc Get user by ID
+ */
+router.get('/:id', usersController.getUserById);
 
 module.exports = router;

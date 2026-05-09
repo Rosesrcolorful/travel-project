@@ -91,3 +91,85 @@ exports.createUser = (req, res) => {
     error: null
   });
 };
+
+/**
+ * @desc Update user by ID
+ * @route PUT /users/:id
+ */
+exports.updateUser = (req, res) => {
+  const id = Number(req.params.id);
+  const { username, firstName, lastName, email, password, userRole } = req.body;
+
+  const user = users.find(u => u.userId === id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      data: null,
+      error: {
+        code: "USER_NOT_FOUND",
+        message: "User not found",
+        details: { id }
+      }
+    });
+  }
+
+  if (!username || !firstName || !lastName || !email || !password || !userRole) {
+    return res.status(400).json({
+      success: false,
+      data: null,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Missing required fields",
+        details: {
+          required: ["username", "firstName", "lastName", "email", "password", "userRole"]
+        }
+      }
+    });
+  }
+
+  user.username = username;
+  user.firstName = firstName;
+  user.lastName = lastName;
+  user.email = email;
+  user.password = password;
+  user.userRole = userRole;
+  user.updateDate = new Date().toISOString();
+
+  res.status(200).json({
+    success: true,
+    data: { userId: user.userId },
+    error: null
+  });
+};
+
+
+/**
+ * @desc Delete user by ID
+ * @route DELETE /users/:id
+ */
+exports.deleteUser = (req, res) => {
+  const id = Number(req.params.id);
+
+  const userIndex = users.findIndex(u => u.userId === id);
+
+  if (userIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      data: null,
+      error: {
+        code: "USER_NOT_FOUND",
+        message: "User not found",
+        details: { id }
+      }
+    });
+  }
+
+  const deletedUser = users.splice(userIndex, 1)[0];
+
+  res.status(200).json({
+    success: true,
+    data: { userId: deletedUser.userId },
+    error: null
+  });
+};
