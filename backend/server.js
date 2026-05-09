@@ -28,6 +28,9 @@ app.get('/', (req, res) => {
 const usersRoutes = require('./routes/usersRoutes');
 app.use('/users', usersRoutes);
 
+const tripsRoutes = require('./routes/tripsRoutes');
+app.use('/trips', tripsRoutes);
+
 // start server
 const PORT = 3000;
 
