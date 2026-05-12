@@ -1,39 +1,57 @@
-
 /**
- * @file Main server file
- * @description Initializes Express app, middleware and routes
+ * Main server file
+ * Initializes Express app, middleware, and routes.
  */
-
 
 const express = require('express');
 const app = express();
 
-// middleware - parsing JSON
+const logger = require('./middleware/logger');
+const usersRoutes = require('./routes/usersRoutes');
+const tripsRoutes = require('./routes/tripsRoutes');
+const friendsRoutes = require('./routes/friendsRoutes');
+
+const PORT = 3000;
+
+// Parse JSON request bodies
 app.use(express.json());
 
-// logger middleware
-const logger = require('./middleware/logger');
+// Log every incoming request
 app.use(logger);
 
-// test route
+// Basic test route
 app.get('/', (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
-    data: 'Server is running',
+    data: {
+      message: 'Travel Backend API is running'
+    },
     error: null
   });
 });
 
-// users routes 
-const usersRoutes = require('./routes/usersRoutes');
+// Main API routes
 app.use('/users', usersRoutes);
-
-const tripsRoutes = require('./routes/tripsRoutes');
 app.use('/trips', tripsRoutes);
+app.use('/friends', friendsRoutes);
 
-// start server
-const PORT = 3000;
+// Route not found handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    data: null,
+    error: {
+      code: 'ROUTE_NOT_FOUND',
+      message: 'The requested route does not exist.',
+      details: {
+        method: req.method,
+        path: req.originalUrl
+      }
+    }
+  });
+});
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

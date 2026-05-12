@@ -1,11 +1,18 @@
 /**
- * @desc Logs incoming HTTP requests
- * @middleware
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Callback to next middleware
+ * Logger middleware
+ * Logs basic information about every incoming request.
  */
+
 module.exports = (req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  const startTime = Date.now();
+
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - ${duration}ms`
+    );
+  });
+
   next();
 };

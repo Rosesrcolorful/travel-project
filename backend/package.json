@@ -1,4 +1,11 @@
 {
+  "name": "travel-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API skeleton for a travel planning platform using Node.js, Express, and mock data.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^5.2.1"
   }
