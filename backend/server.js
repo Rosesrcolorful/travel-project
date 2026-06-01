@@ -10,6 +10,9 @@ const logger = require('./middleware/logger');
 const usersRoutes = require('./routes/usersRoutes');
 const tripsRoutes = require('./routes/tripsRoutes');
 const friendsRoutes = require('./routes/friendsRoutes');
+const authRoutes = require('./routes/authRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+const authController = require('./controllers/authController');
 
 const PORT = 3000;
 
@@ -18,6 +21,9 @@ app.use(express.json());
 
 // Log every incoming request
 app.use(logger);
+app.use('/api/auth', authRoutes);
+app.use('/api/settings', settingsRoutes);
+app.get('/api/users/me', authController.getMe);
 
 // Basic test route
 app.get('/', (req, res) => {
