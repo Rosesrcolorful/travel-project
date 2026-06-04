@@ -72,13 +72,45 @@ exports.logout = (req, res) => {
  * @access Public
  */
 exports.getMe = (req, res) => {
-  const user = users[0];
+  const userId = Number(req.header("x-user-id"));
+
+  if (!userId) {
+    return res.status(400).json({
+      success: false,
+      data: null,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Missing user id.",
+        details: {
+          header: "x-user-id"
+        }
+      }
+    });
+  }
+
+  const user = users.find((u) => u.userId === userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      data: null,
+      error: {
+        code: "USER_NOT_FOUND",
+        message: "User not found.",
+        details: {
+          userId
+        }
+      }
+    });
+  }
 
   res.status(200).json({
     success: true,
     data: {
       userId: user.userId,
       username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       userRole: user.userRole
     },

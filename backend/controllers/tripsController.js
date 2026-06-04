@@ -16,9 +16,19 @@ const isValidId = (id) => {
  * destination, status, name
  */
 exports.getAllTrips = (req, res) => {
-  const { destination, status, name } = req.query;
+  const { destination, status, name, userId } = req.query;
 
   let filteredTrips = trips;
+
+  if (userId) {
+  const numericUserId = Number(userId);
+
+  filteredTrips = filteredTrips.filter(
+    (trip) =>
+      trip.createdBy === numericUserId ||
+      trip.participants.includes(numericUserId)
+  );
+}
 
   if (destination) {
     filteredTrips = filteredTrips.filter((trip) =>

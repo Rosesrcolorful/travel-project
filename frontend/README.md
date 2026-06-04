@@ -1,70 +1,255 @@
-# Getting Started with Create React App
+# TravelMate Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the React frontend application for the TravelMate travel planning project.
 
-## Available Scripts
+The frontend connects to the backend REST API from Assignment 2 and allows users to log in, view a travel dashboard, see mock trip data, view travel friends, update settings, change theme preference, and log out.
 
-In the project directory, you can run:
+## Technologies Used
 
-### `npm start`
+* React.js
+* React Router
+* Fetch API
+* CSS
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Project Structure
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```text
+src/
+├── components/
+│   ├── Navbar.js
+│   ├── Footer.js
+│   ├── TripCard.js
+│   ├── TripsTable.js
+│   └── FriendCard.js
+├── pages/
+│   ├── LoginPage.js
+│   ├── DashboardPage.js
+│   └── SettingsPage.js
+├── services/
+│   ├── authService.js
+│   ├── settingsService.js
+│   ├── tripsService.js
+│   └── friendsService.js
+├── App.js
+└── App.css
+```
 
-### `npm test`
+## Backend API Base URL
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The frontend connects to the backend server at:
 
-### `npm run build`
+```text
+http://localhost:3000
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The backend must be running before using the frontend.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Frontend URL
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The frontend runs locally on:
 
-### `npm run eject`
+```text
+http://localhost:5173
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+This port is configured in the frontend environment settings.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## How to Install Dependencies
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+From the `frontend` folder, run:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+npm install
+```
 
-## Learn More
+On Windows PowerShell, if `npm` is blocked, use:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm.cmd install
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## How to Start the Frontend
 
-### Code Splitting
+From the `frontend` folder, run:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm start
+```
 
-### Analyzing the Bundle Size
+On Windows PowerShell, if `npm` is blocked, use:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+npm.cmd start
+```
 
-### Making a Progressive Web App
+Then open:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```text
+http://localhost:5173
+```
 
-### Advanced Configuration
+## How to Run the Full Project
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Open two terminals.
 
-### Deployment
+### Terminal 1 — Backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+cd backend
+npm install
+npm start
+```
 
-### `npm run build` fails to minify
+If using Windows PowerShell:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+cd backend
+npm.cmd install
+npm.cmd start
+```
+
+The backend should run on:
+
+```text
+http://localhost:3000
+```
+
+### Terminal 2 — Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+If using Windows PowerShell:
+
+```bash
+cd frontend
+npm.cmd install
+npm.cmd start
+```
+
+The frontend should run on:
+
+```text
+http://localhost:5173
+```
+
+## Demo Users
+
+You can log in using one of the following users:
+
+```text
+Email: yossi@email.com
+Password: 123456
+```
+
+```text
+Email: tamar@email.com
+Password: 123456
+```
+
+```text
+Email: roni@email.com
+Password: 123456
+```
+
+## Main Pages
+
+### Login Page
+
+The login page includes:
+
+* Email input
+* Password input
+* Login button
+* Client-side validation
+* Loading state
+* Error message for invalid login
+* Redirect to dashboard after successful login
+
+Backend endpoint used:
+
+```text
+POST /api/auth/login
+```
+
+### Dashboard Page
+
+The dashboard page displays data from the backend, including:
+
+* Summary cards
+* Featured trip cards
+* Travel friends section
+* Trips data table
+
+Backend endpoints used:
+
+```text
+GET /trips
+GET /friends/:userId
+GET /users/:id
+```
+
+The trip cards are reusable components, and the trips table dynamically maps over trip data received from the backend.
+
+### Settings Page
+
+The settings page allows the logged-in user to update:
+
+* Username
+* Email
+* Theme preference
+* Password
+
+Backend endpoints used:
+
+```text
+GET /api/settings
+PUT /api/settings
+```
+
+The theme preference supports:
+
+* Light
+* Dark
+* Travel
+
+The selected theme changes the visual design of the application.
+
+### Navbar and Footer
+
+After login, the application displays:
+
+* Project name/logo
+* Navigation links
+* Logged-in user name
+* Settings link
+* Logout button
+* Footer with project description
+
+Backend endpoints used:
+
+```text
+GET /api/users/me
+POST /api/auth/logout
+```
+
+## Notes
+
+This project uses mock backend data only. Data changes are stored in memory while the backend server is running.
+
+If the backend server is restarted, updated settings and password changes reset to the original mock data.
+
+This behavior is expected for this assignment because the project is not connected to a real database yet.
+
+## Screenshots for Submission
+
+Screenshots:
+
+1. Login page
+2. Dashboard page
+3. Trips table
+4. Settings page
+5. Optional validation or error example
