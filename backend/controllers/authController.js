@@ -73,7 +73,7 @@ exports.logout = (req, res) => {
  */
 exports.getMe = (req, res) => {
   const userId = Number(req.header("x-user-id"));
-
+  
   if (!userId) {
     return res.status(400).json({
       success: false,

@@ -2,7 +2,8 @@
  * Main server file
  * Initializes Express app, middleware, and routes.
  */
-
+require('dotenv').config();
+const db = require('./models');
 const express = require('express');
 const app = express();
 
@@ -26,7 +27,7 @@ const authRoutes = require('./routes/authRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const authController = require('./controllers/authController');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Parse JSON request bodies
 app.use(express.json());
@@ -69,7 +70,18 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+db.sequelize.authenticate()
+  .then(() => {
+    console.log('MySQL connected successfully');
+    return db.sequelize.sync({ alter: true });
+  })
+  .then(() => {
+    console.log('Database tables synced successfully');
+
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Unable to connect to MySQL:', error);
+  });
