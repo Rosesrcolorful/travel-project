@@ -2,57 +2,59 @@ const express = require('express');
 const router = express.Router();
 
 const friendsController = require('../controllers/friendsController');
-const roleCheck = require('../middleware/roleCheck');
 
 /**
  * @route GET /friends
  * @desc Get all friendship records
- * @access Admin and manager only
  */
-router.get(
-  '/',
-  roleCheck(['admin', 'manager']),
-  friendsController.getAllFriends
-);
+router.get('/', friendsController.getAllFriends);
+
+/**
+ * @route GET /friends/search?username=...&userId=...
+ * @desc Search users by username for friend requests
+ */
+router.get('/search', friendsController.searchUsersByUsername);
+
+/**
+ * @route GET /friends/requests/:userId
+ * @desc Get pending friend requests received by a user
+ */
+router.get('/requests/:userId', friendsController.getPendingRequests);
 
 /**
  * @route POST /friends
- * @desc Create a new friendship request
- * @access Admin, manager, and user
+ * @desc Send a friend request
  */
-router.post(
-  '/',
-  roleCheck(['admin', 'manager', 'user']),
-  friendsController.createFriendship
-);
+router.post('/', friendsController.createFriendship);
 
 /**
  * @route GET /friends/:userId
- * @desc Get all friends for a specific user
- * @access Public
+ * @desc Get friendship records for one user
  */
 router.get('/:userId', friendsController.getFriendsByUserId);
 
 /**
+ * @route PUT /friends/:id/accept
+ * @desc Accept friend request
+ */
+router.put('/:id/accept', friendsController.acceptFriendship);
+
+/**
+ * @route PUT /friends/:id/decline
+ * @desc Decline friend request
+ */
+router.put('/:id/decline', friendsController.declineFriendship);
+
+/**
  * @route PUT /friends/:id
  * @desc Update friendship status
- * @access Admin and manager only
  */
-router.put(
-  '/:id',
-  roleCheck(['admin', 'manager']),
-  friendsController.updateFriendship
-);
+router.put('/:id', friendsController.updateFriendship);
 
 /**
  * @route DELETE /friends/:id
- * @desc Delete friendship by ID
- * @access Admin only
+ * @desc Unfriend / delete friendship record
  */
-router.delete(
-  '/:id',
-  roleCheck(['admin']),
-  friendsController.deleteFriendship
-);
+router.delete('/:id', friendsController.deleteFriendship);
 
 module.exports = router;

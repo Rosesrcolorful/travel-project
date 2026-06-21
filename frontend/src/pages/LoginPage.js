@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
 
 function LoginPage({ onLogin }) {
@@ -95,6 +95,10 @@ function LoginPage({ onLogin }) {
 
         <p className="demo-note">
           Demo user: tamar@email.com / 123456
+        </p>
+
+        <p className="demo-note">
+          New here? <Link to="/signup">Create an account</Link>
         </p>
       </section>
     </div>

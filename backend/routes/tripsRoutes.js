@@ -1,42 +1,43 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const tripsController = require('../controllers/tripsController');
-const roleCheck = require('../middleware/roleCheck');
+const tripsController = require("../controllers/tripsController");
+const tripSharesController = require("../controllers/tripSharesController");
 
 /**
  * @route GET /trips
- * @desc Get all trips, with optional filters
- * @access Public
+ * @desc Get trips, with optional filters
  */
-router.get('/', tripsController.getAllTrips);
+router.get("/", tripsController.getAllTrips);
 
 /**
  * @route POST /trips
  * @desc Create a new trip
- * @access Admin, manager, and user
  */
-router.post('/', roleCheck(['admin', 'manager', 'user']), tripsController.createTrip);
+router.post("/", tripsController.createTrip);
+
+/**
+ * @route POST /trips/:id/share
+ * @desc Share trip with a friend
+ */
+router.post("/:id/share", tripSharesController.shareTrip);
 
 /**
  * @route GET /trips/:id
  * @desc Get trip by ID
- * @access Public
  */
-router.get('/:id', tripsController.getTripById);
+router.get("/:id", tripsController.getTripById);
 
 /**
  * @route PUT /trips/:id
  * @desc Update trip by ID
- * @access Admin and manager only
  */
-router.put('/:id', roleCheck(['admin', 'manager']), tripsController.updateTrip);
+router.put("/:id", tripsController.updateTrip);
 
 /**
  * @route DELETE /trips/:id
  * @desc Delete trip by ID
- * @access Admin only
  */
-router.delete('/:id', roleCheck(['admin']), tripsController.deleteTrip);
+router.delete("/:id", tripsController.deleteTrip);
 
 module.exports = router;

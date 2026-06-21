@@ -1,5 +1,23 @@
 const API_BASE_URL = "http://localhost:3000";
 
+export async function signup(signupData) {
+  const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(signupData)
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error?.message || "Signup failed");
+  }
+
+  return result.data;
+}
+
 export async function login(email, password) {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",

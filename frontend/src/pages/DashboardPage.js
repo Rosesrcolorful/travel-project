@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import { getTrips } from "../services/tripsService";
 import { getFriendsForUser } from "../services/friendsService";
 
@@ -53,14 +55,31 @@ function DashboardPage({ userId }) {
           <h1>Plan trips, save ideas, and travel together.</h1>
           <p>
             Your dashboard brings together saved trips, travel friends, and future
-            collaboration features in one place.
+            AI recommendations in one place.
           </p>
+
+          <div className="hero-actions">
+            <Link className="hero-button" to="/plan-trip">
+              Plan New Trip
+            </Link>
+
+            <Link className="hero-button secondary" to="/trips/new">
+              Create Manually
+            </Link>
+
+            <Link className="hero-button secondary" to="/trips">
+              View My Trips
+            </Link>
+          </div>
         </div>
 
         <div className="hero-card">
-          <span>Next idea</span>
-          <strong>Hidden gems recommendations</strong>
-          <p>Coming soon: personalized local spots based on your travel style.</p>
+          <span>AI feature</span>
+          <strong>Trip recommendations</strong>
+          <p>
+            Describe your ideal trip and let the AI suggest a plan you can edit,
+            save, and share.
+          </p>
         </div>
       </section>
 
@@ -95,8 +114,12 @@ function DashboardPage({ userId }) {
           <section className="section-header">
             <div>
               <h2>Featured Trips</h2>
-              <p>Example saved trips fetched from the backend.</p>
+              <p>Your latest saved trips from the database.</p>
             </div>
+
+            <Link className="small-link-button" to="/trips">
+              Manage all
+            </Link>
           </section>
 
           <section className="cards-grid">
@@ -125,7 +148,13 @@ function DashboardPage({ userId }) {
           </section>
 
           <section className="table-section">
-            <h2>All Trips</h2>
+            <div className="section-header no-margin-top">
+              <div>
+                <h2>All Trips</h2>
+                <p>Quick overview of your current trip records.</p>
+              </div>
+            </div>
+
             <TripsTable trips={trips} />
           </section>
         </>

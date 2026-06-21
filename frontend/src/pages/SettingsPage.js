@@ -1,21 +1,40 @@
 import { useEffect, useState } from "react";
-import { getSettings, updateSettings } from "../services/settingsService";
+import { useNavigate } from "react-router-dom";
+import {
+  getSettings,
+  updateSettings,
+  changePassword,
+  deleteAccount
+} from "../services/settingsService";
 
-function SettingsPage({ userId }) {
+function SettingsPage({ userId, onAccountDeleted }) {
+  const navigate = useNavigate();
+
   const [settings, setSettings] = useState({
     username: "",
     email: "",
-    theme: "light",
+    theme: "light"
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
 
-  const [errors, setErrors] = useState({});
+  const [deletePassword, setDeletePassword] = useState("");
+
+  const [profileErrors, setProfileErrors] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [deleteError, setDeleteError] = useState("");
+
   const [pageError, setPageError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -25,12 +44,12 @@ function SettingsPage({ userId }) {
         setSettings({
           username: settingsFromServer.username || "",
           email: settingsFromServer.email || "",
-          theme: settingsFromServer.theme || "light",
-          newPassword: "",
-          confirmPassword: ""
+          theme: settingsFromServer.theme || "light"
         });
+
         document.body.className = "";
         document.body.classList.add(`theme-${settingsFromServer.theme || "light"}`);
+        localStorage.setItem("theme", settingsFromServer.theme || "light");
       } catch (error) {
         setPageError(error.message);
       } finally {
@@ -41,7 +60,7 @@ function SettingsPage({ userId }) {
     loadSettings();
   }, [userId]);
 
-  const validateForm = () => {
+  const validateProfileForm = () => {
     const newErrors = {};
 
     if (!settings.username.trim()) {
@@ -58,22 +77,32 @@ function SettingsPage({ userId }) {
       newErrors.theme = "Theme preference is required";
     }
 
-    if (settings.newPassword || settings.confirmPassword) {
-      if (settings.newPassword.length < 6) {
-        newErrors.newPassword = "New password must be at least 6 characters";
-      }
-
-      if (settings.newPassword !== settings.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
-    }
-
-    setErrors(newErrors);
-
+    setProfileErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (event) => {
+  const validatePasswordForm = () => {
+    const newErrors = {};
+
+    if (!passwordForm.currentPassword) {
+      newErrors.currentPassword = "Current password is required";
+    }
+
+    if (!passwordForm.newPassword) {
+      newErrors.newPassword = "New password is required";
+    } else if (passwordForm.newPassword.length < 6) {
+      newErrors.newPassword = "New password must be at least 6 characters";
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setPasswordErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSettingsChange = (event) => {
     const { name, value } = event.target;
 
     setSettings((previousSettings) => ({
@@ -82,47 +111,115 @@ function SettingsPage({ userId }) {
     }));
   };
 
-  const handleSubmit = async (event) => {
+  const handlePasswordChange = (event) => {
+    const { name, value } = event.target;
+
+    setPasswordForm((previousForm) => ({
+      ...previousForm,
+      [name]: value
+    }));
+  };
+
+  const handleProfileSubmit = async (event) => {
     event.preventDefault();
 
     setPageError("");
     setSuccessMessage("");
 
-    if (!validateForm()) {
+    if (!validateProfileForm()) {
       return;
     }
 
     try {
-      setSaving(true);
+      setSavingProfile(true);
 
-      const settingsToUpdate = {
+      const updatedSettings = await updateSettings(userId, {
         username: settings.username,
         email: settings.email,
         theme: settings.theme
-      };
-
-      if (settings.newPassword) {
-        settingsToUpdate.newPassword = settings.newPassword;
-      }
-
-      const updatedSettings = await updateSettings(userId, settingsToUpdate);
+      });
 
       setSettings({
         username: updatedSettings.username || "",
         email: updatedSettings.email || "",
-        theme: updatedSettings.theme || "light",
-        newPassword: "",
-        confirmPassword: ""
+        theme: updatedSettings.theme || "light"
       });
 
       document.body.className = "";
       document.body.classList.add(`theme-${updatedSettings.theme || "light"}`);
+      localStorage.setItem("theme", updatedSettings.theme || "light");
 
-      setSuccessMessage("Settings updated successfully.");
+      setSuccessMessage("Profile settings updated successfully.");
     } catch (error) {
       setPageError(error.message);
     } finally {
-      setSaving(false);
+      setSavingProfile(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (event) => {
+    event.preventDefault();
+
+    setPageError("");
+    setSuccessMessage("");
+
+    if (!validatePasswordForm()) {
+      return;
+    }
+
+    try {
+      setSavingPassword(true);
+
+      await changePassword(userId, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+
+      setSuccessMessage("Password changed successfully.");
+    } catch (error) {
+      setPageError(error.message);
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async (event) => {
+    event.preventDefault();
+
+    setDeleteError("");
+    setPageError("");
+    setSuccessMessage("");
+
+    if (!deletePassword) {
+      setDeleteError("Password is required before deleting account.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+
+      await deleteAccount(userId, deletePassword);
+
+      onAccountDeleted();
+      navigate("/signup");
+    } catch (error) {
+      setPageError(error.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -131,105 +228,198 @@ function SettingsPage({ userId }) {
   }
 
   return (
-    <section className="page">
+    <section className="settings-page">
+      <div className="settings-page-header">
+        <div>
+          <p className="eyebrow">Account settings</p>
+          <h1>Settings</h1>
+          <p>
+            Manage your profile, theme, password, and account preferences.
+          </p>
+        </div>
+      </div>
+
+      {pageError && <p className="error-message settings-message">{pageError}</p>}
+      {successMessage && (
+        <p className="success-message settings-message">{successMessage}</p>
+      )}
+
       <div className="settings-layout">
         <aside className="settings-info-card">
-          <p className="eyebrow dark">Account settings</p>
-          <h1>Personalize your travel profile</h1>
+          <h2>Your account</h2>
           <p>
-            Keep your account details updated and choose how you prefer to use
-            the travel planner.
+            These settings are saved in the database, so they stay after refreshing
+            or restarting the server.
           </p>
 
           <div className="settings-mini-list">
             <div>
               <strong>Profile</strong>
-              <span>Username and email information</span>
+              <span>Username and email</span>
             </div>
 
             <div>
-              <strong>Theme</strong>
-              <span>Visual preference saved for your account</span>
+              <strong>Appearance</strong>
+              <span>Light, dark, or travel theme</span>
             </div>
 
             <div>
-              <strong>Mock backend</strong>
-              <span>Settings are loaded and updated through the API</span>
+              <strong>Security</strong>
+              <span>Password and account deletion</span>
             </div>
           </div>
         </aside>
 
-        <form className="settings-form form" onSubmit={handleSubmit}>
-          <label>
-            Username
-            <input
-              type="text"
-              name="username"
-              value={settings.username}
-              placeholder="Enter username"
-              onChange={handleChange}
-            />
-          </label>
-          {errors.username && <p className="field-error">{errors.username}</p>}
+        <div className="settings-form">
+          <form className="settings-card" onSubmit={handleProfileSubmit}>
+            <div className="settings-card-header">
+              <div>
+                <h2>Profile</h2>
+                <p>Update your public account details.</p>
+              </div>
+            </div>
 
-          <label>
-            Email
-            <input
-              type="email"
-              name="email"
-              value={settings.email}
-              placeholder="Enter email"
-              onChange={handleChange}
-            />
-          </label>
-          {errors.email && <p className="field-error">{errors.email}</p>}
+            <div className="settings-form-grid">
+              <div className="settings-field">
+                <label>Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={settings.username}
+                  placeholder="Enter username"
+                  onChange={handleSettingsChange}
+                />
+                {profileErrors.username && (
+                  <p className="field-error">{profileErrors.username}</p>
+                )}
+              </div>
 
-          <label>
-            Theme Preference
-            <select
-              name="theme"
-              value={settings.theme}
-              onChange={handleChange}
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="travel">Travel</option>
-            </select>
-          </label>
-          <label>
-            New Password
-            <input
-              type="password"
-              name="newPassword"
-              value={settings.newPassword}
-              placeholder="Leave empty to keep current password"
-              onChange={handleChange}
-            />
-          </label>
-          {errors.newPassword && <p className="field-error">{errors.newPassword}</p>}
+              <div className="settings-field">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={settings.email}
+                  placeholder="Enter email"
+                  onChange={handleSettingsChange}
+                />
+                {profileErrors.email && (
+                  <p className="field-error">{profileErrors.email}</p>
+                )}
+              </div>
+            </div>
 
-          <label>
-            Confirm New Password
-            <input
-              type="password"
-              name="confirmPassword"
-              value={settings.confirmPassword}
-              placeholder="Confirm new password"
-              onChange={handleChange}
-            />
-          </label>
-          {errors.confirmPassword && (
-            <p className="field-error">{errors.confirmPassword}</p>
-          )}
-          {errors.theme && <p className="field-error">{errors.theme}</p>}
+            <div className="settings-field">
+              <label>Theme Preference</label>
+              <select
+                name="theme"
+                value={settings.theme}
+                onChange={handleSettingsChange}
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="travel">Travel</option>
+              </select>
+              {profileErrors.theme && (
+                <p className="field-error">{profileErrors.theme}</p>
+              )}
+            </div>
 
-          {pageError && <p className="error-message">{pageError}</p>}
-          {successMessage && <p className="success-message">{successMessage}</p>}
+            <div className="settings-actions">
+              <button className="settings-primary-button" type="submit" disabled={savingProfile}>
+                {savingProfile ? "Saving..." : "Save Profile"}
+              </button>
+            </div>
+          </form>
 
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
-        </form>
+          <form className="settings-card" onSubmit={handlePasswordSubmit}>
+            <div className="settings-card-header">
+              <div>
+                <h2>Change Password</h2>
+                <p>Confirm your current password before setting a new one.</p>
+              </div>
+            </div>
+
+            <div className="settings-field">
+              <label>Current Password</label>
+              <input
+                type="password"
+                name="currentPassword"
+                value={passwordForm.currentPassword}
+                placeholder="Enter current password"
+                onChange={handlePasswordChange}
+              />
+              {passwordErrors.currentPassword && (
+                <p className="field-error">{passwordErrors.currentPassword}</p>
+              )}
+            </div>
+
+            <div className="settings-form-grid">
+              <div className="settings-field">
+                <label>New Password</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordForm.newPassword}
+                  placeholder="Enter new password"
+                  onChange={handlePasswordChange}
+                />
+                {passwordErrors.newPassword && (
+                  <p className="field-error">{passwordErrors.newPassword}</p>
+                )}
+              </div>
+
+              <div className="settings-field">
+                <label>Confirm New Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordForm.confirmPassword}
+                  placeholder="Confirm new password"
+                  onChange={handlePasswordChange}
+                />
+                {passwordErrors.confirmPassword && (
+                  <p className="field-error">{passwordErrors.confirmPassword}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="settings-actions">
+              <button className="settings-primary-button" type="submit" disabled={savingPassword}>
+                {savingPassword ? "Changing..." : "Change Password"}
+              </button>
+            </div>
+          </form>
+
+          <form className="settings-card danger-card" onSubmit={handleDeleteAccount}>
+            <div className="settings-card-header">
+              <div>
+                <h2>Delete Account</h2>
+                <p>
+                  This removes your user account, friendships, and trip participation
+                  records.
+                </p>
+              </div>
+            </div>
+
+            <div className="settings-field">
+              <label>Confirm Password</label>
+              <input
+                type="password"
+                value={deletePassword}
+                placeholder="Enter password to delete account"
+                onChange={(event) => setDeletePassword(event.target.value)}
+              />
+              {deleteError && <p className="field-error">{deleteError}</p>}
+            </div>
+
+            <div className="settings-actions">
+              <button className="settings-danger-button" type="submit" disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete My Account"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </section>
   );

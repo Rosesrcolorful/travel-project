@@ -1,109 +1,533 @@
-# Travel Planner Backend API
+# TravelMate - AI Travel Planning Platform
 
-Backend API skeleton for a travel planning platform built with **Node.js** and **Express**.
+TravelMate is a full-stack travel planning website where users can create trips, manage their personal travel plans, connect with friends, chat in real time, share trips, and generate trip suggestions using AI.
 
-The API uses **mock data only**. No real database is connected yet.  
-Data is stored in memory and resets when the server restarts.
-
-## Resources
-
-The API includes three resources:
-
-- Users
-- Trips
-- Friends
-
-These match the project idea of a travel platform where users can create trips, save travel plans, and manage friends.
+This README explains how to install, run, and use the website from start to finish.
 
 ---
 
-## Project Structure
+## 1. Technologies Used
+
+### Frontend
+
+- React
+- React Router
+- Create React App / react-scripts
+- Axios
+- CSS
+
+### Backend
+
+* Node.js
+* Express
+* MySQL
+* Sequelize ORM
+* Socket.IO
+* OpenAI API
+
+---
+
+## 2. Main Features
+
+The website includes:
+
+* User signup
+* User login
+* User settings page
+* Change username, email, theme, and password
+* Delete account
+* Create trips manually
+* View all personal and shared trips
+* Edit trips as the trip owner
+* View shared trips as a participant
+* Delete trips as the trip owner
+* Search users
+* Send friend requests
+* Accept or decline friend requests
+* Remove friends
+* Real-time chat between friends
+* Online user indication
+* Share trips with friends
+* Accept or decline shared trips
+* AI trip planner
+* Save AI-generated trips
+* Save and share AI-generated trips
+
+---
+
+## 3. Project Structure
 
 ```txt
-backend/
-├── server.js
-├── package.json
-├── README.md
-├── controllers/
-├── routes/
-├── models/
-├── middleware/
-└── docs/
-    ├── postman_collection.json
-    └── screenshots/
+travel-project/
+  backend/
+    config/
+    controllers/
+    docs/
+    middleware/
+    migrations/
+    models/
+    routes/
+    services/
+    socket/
+    .env.example
+    package.json
+    seed.js
+    server.js
+
+  frontend/
+    src/
+      components/
+      pages/
+      services/
+      App.js
+      App.css
+    package.json
+
+  README.md
 ```
 
 ---
 
-## Installation
+## 4. Database Setup
 
-Open a terminal inside the `backend` folder.
+This project uses MySQL with Sequelize ORM.
+
+Before running the backend, make sure MySQL is installed and running.
+
+Create a database called:
+
+```txt
+travel_project
+```
+
+You can create it using MySQL Workbench, phpMyAdmin, or the MySQL command line:
+
+```sql
+CREATE DATABASE travel_project;
+```
+
+---
+
+## 5. Environment Variables
+
+Inside the `backend` folder, create a file named:
+
+```txt
+.env
+```
+
+Use `backend/.env.example` as a template.
+
+Example:
+
+```env
+PORT=3000
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=travel_project
+DB_USER=root
+DB_PASSWORD=your_mysql_password_here
+
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Important:
+
+* Do not upload or share the real `.env` file publicly.
+* The OpenAI API key must stay only in the backend.
+* The frontend does not contain the OpenAI key.
+
+---
+
+## 6. Installing and Running the Backend
+
+Open a terminal in the project folder.
+
+Go into the backend folder:
+
+```bash
+cd backend
+```
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-On Windows PowerShell, if `npm` is blocked, use:
+Run the seed file:
 
 ```bash
-npm.cmd install
+node seed.js
 ```
 
----
-
-## Run the Server
+Start the backend server:
 
 ```bash
 npm start
 ```
 
-Or:
-
-```bash
-npm.cmd start
-```
-
-Or:
-
-```bash
-node server.js
-```
-
-Server runs at:
+The backend should run on:
 
 ```txt
 http://localhost:3000
 ```
 
-API base path:
+---
 
-```txt
-/
+## 7. Installing and Running the Frontend
+
+Open another terminal.
+
+Go into the frontend folder:
+
+```bash
+cd frontend
 ```
 
-Main routes:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the frontend:
+
+```bash
+npm start
+```
+
+The frontend should run on:
 
 ```txt
-/users
-/trips
-/friends
+http://localhost:5173
 ```
+
+Open this address in the browser.
 
 ---
 
-## Assumptions
+## 8. Test Users
 
-- Mock data only, no MySQL/database yet.
-- Data resets when the server restarts.
-- IDs are generated automatically using the current max ID + 1.
-- Authentication is simulated with the `x-user-role` header.
-- All responses are JSON.
+After running `node seed.js`, the database contains test users.
+
+Use the following accounts to test the website:
+
+```txt
+User 1:
+Email: ADD_EMAIL_HERE
+Password: ADD_PASSWORD_HERE
+
+User 2:
+Email: ADD_EMAIL_HERE
+Password: ADD_PASSWORD_HERE
+
+Admin user:
+Email: ADD_EMAIL_HERE
+Password: ADD_PASSWORD_HERE
+```
+
+The admin user exists in the database as part of the ORM model structure. The main user interface focuses on the travel planning, friends, chat, sharing, and AI trip planner features.
 
 ---
 
-## Response Format
+## 9. How to Use the Website
 
-### Success
+### 9.1 Signup
+
+1. Open the website.
+2. Go to the signup page.
+3. Enter first name, last name, username, email, and password.
+4. Submit the form.
+5. After signup, login with the new account.
+
+---
+
+### 9.2 Login
+
+1. Open the login page.
+2. Enter an existing user email and password.
+3. Click login.
+4. After login, the user is redirected to the dashboard.
+
+---
+
+### 9.3 Dashboard
+
+The dashboard shows a summary of the user's trips and quick actions.
+
+From the dashboard, the user can:
+
+* Plan a new trip with AI
+* Create a trip manually
+* View existing trips
+* Navigate to friends, chat, and settings
+
+---
+
+### 9.4 Settings Page
+
+The settings page allows the user to:
+
+* Update username
+* Update email
+* Change website theme
+* Change password
+* Delete account
+
+To change password:
+
+1. Enter the current password.
+2. Enter the new password.
+3. Save the changes.
+
+If the current password is wrong, the website shows an error.
+
+To delete account:
+
+1. Enter the account password.
+2. Click delete account.
+3. The account is removed from the database.
+
+Use a test account only when testing account deletion.
+
+---
+
+### 9.5 My Trips Page
+
+The My Trips page shows:
+
+* Trips created by the logged-in user
+* Trips shared with the logged-in user
+
+For each trip, the page shows:
+
+* Trip name
+* Destination
+* Dates
+* Budget
+* Status
+* Participants
+* Share controls
+* Actions
+
+Trip owners can:
+
+* Edit the trip
+* Delete the trip
+* Share the trip with friends
+
+Trip participants can:
+
+* View the trip
+* See the owner and participants
+* They cannot edit or delete the trip
+* They cannot share the trip again
+
+---
+
+### 9.6 Create a Manual Trip
+
+1. Go to `My Trips`.
+2. Click `Create Trip`.
+3. Enter the trip name, destination, dates, budget, status, and description.
+4. Save the trip.
+5. The trip appears in `My Trips`.
+
+---
+
+### 9.7 Edit a Trip
+
+Only the trip owner can edit a trip.
+
+1. Go to `My Trips`.
+2. Click `Edit` on a trip owned by the logged-in user.
+3. Change the trip details.
+4. Save changes.
+
+If the logged-in user is only a participant, the page opens in view-only mode.
+
+---
+
+### 9.8 Delete a Trip
+
+Only the trip owner can delete a trip.
+
+1. Go to `My Trips`.
+2. Click `Delete` on a trip owned by the logged-in user.
+3. Confirm the action if needed.
+4. The trip is removed.
+
+---
+
+## 10. Friends System
+
+### 10.1 Search for a User
+
+1. Go to the Friends page.
+2. Use the search box.
+3. Search by username.
+4. Matching users appear in the results.
+
+---
+
+### 10.2 Send a Friend Request
+
+1. Search for another user.
+2. Click `Add`.
+3. The request appears under sent requests.
+4. The other user will see it under received requests.
+
+---
+
+### 10.3 Accept or Decline a Friend Request
+
+Login as the second user.
+
+1. Go to the Friends page.
+2. Find the received request.
+3. Click `Accept` or `Decline`.
+
+After accepting, both users appear in each other's friends list.
+
+---
+
+### 10.4 Remove a Friend
+
+1. Go to the Friends page.
+2. Find the friend in the friends list.
+3. Click remove.
+4. The friendship is removed.
+
+---
+
+## 11. Real-Time Chat
+
+The website uses Socket.IO for real-time chat.
+
+To test chat:
+
+1. Open the website in two browser windows or two different browsers.
+2. Login as User 1 in the first browser.
+3. Login as User 2 in the second browser.
+4. Make sure the users are friends.
+5. Open the Friends page.
+6. Select the friend.
+7. Send a message.
+8. The other user should receive it immediately without refreshing the page.
+
+The chat also shows online indication when the other user is connected.
+
+---
+
+## 12. Trip Sharing
+
+A user can share a trip only if they are the trip owner.
+
+To share a trip:
+
+1. Login as the trip owner.
+2. Go to `My Trips`.
+3. Find the trip.
+4. Choose a friend from the share dropdown.
+5. Click `Share`.
+
+The receiver can accept or decline the shared trip.
+
+Shared trips can also appear inside the chat as trip-share messages.
+
+---
+
+## 13. Accepting a Shared Trip
+
+Login as the receiving user.
+
+A shared trip can be accepted from the sharing area or from the chat trip-share card.
+
+After accepting:
+
+* The trip appears in the receiver's `My Trips` page.
+* The receiver becomes a participant.
+* The receiver can view the trip.
+* The receiver cannot edit, delete, or re-share the trip.
+
+---
+
+## 14. AI Trip Planner
+
+The AI trip planner is available from the `Plan Trip` page.
+
+To use it:
+
+1. Go to `Plan Trip`.
+2. Enter a travel prompt.
+3. Example prompt:
+
+```txt
+Plan a 5-day budget trip to Rome for two friends who like food, museums, and walking tours.
+```
+
+4. Click generate.
+5. The backend sends the request to the OpenAI API.
+6. The generated trip appears on the page.
+7. The user can edit the generated trip details before saving.
+
+The user can then:
+
+* Save the AI trip
+* Save and share the AI trip with a friend
+
+---
+
+## 15. Save an AI Trip
+
+1. Generate a trip in the AI planner.
+2. Review and edit the generated details.
+3. Click `Save Trip`.
+4. The trip is saved to the database.
+5. The trip appears in `My Trips`.
+
+---
+
+## 16. Save and Share an AI Trip
+
+1. Generate a trip in the AI planner.
+2. Review and edit the generated details.
+3. Choose a friend.
+4. Click `Save & Share`.
+5. The trip is saved to the database.
+6. A trip-share request is sent to the selected friend.
+
+---
+
+## 17. Socket.IO Events
+
+The project uses several custom Socket.IO events, including:
+
+```txt
+user:join
+user:online
+chat:send
+chat:received
+trip_share:respond
+trip_share:updated
+```
+
+These events support:
+
+* Real-time chat
+* Online user indication
+* Trip-share updates
+
+---
+
+## 18. API Response Format
+
+The backend returns consistent success and error responses.
+
+Successful response:
 
 ```json
 {
@@ -113,7 +537,7 @@ Main routes:
 }
 ```
 
-### Error
+Error response:
 
 ```json
 {
@@ -121,7 +545,7 @@ Main routes:
   "data": null,
   "error": {
     "code": "ERROR_CODE",
-    "message": "Human readable message.",
+    "message": "Human readable message",
     "details": {}
   }
 }
@@ -129,304 +553,85 @@ Main routes:
 
 ---
 
-## Authorization
+## 19. Main Database Models
 
-Protected routes use this request header:
+The project uses Sequelize ORM models.
 
-```txt
-x-user-role: admin
-```
+Main models:
 
-Available roles:
+* User
+* Admin
+* Trip
+* TripParticipant
+* Friendship
+* TripShare
+* Message
 
-```txt
-admin
-manager
-user
-```
+Examples of relationships:
 
-| Action | Allowed Roles |
-|---|---|
-| Create user | admin |
-| Update user | admin, manager |
-| Delete user | admin |
-| Create trip | admin, manager, user |
-| Update trip | admin, manager |
-| Delete trip | admin |
-| Get all friendships | admin, manager |
-| Create friendship | admin, manager, user |
-| Update friendship | admin, manager |
-| Delete friendship | admin |
-
-Public routes do not require a role header.
+* A user can create many trips.
+* A trip belongs to one creator.
+* A trip can have many participants.
+* A user can participate in many trips.
+* Users can have friendships with other users.
+* Users can send and receive messages.
+* Trips can be shared between users.
 
 ---
 
-# API Reference
+## 20. Troubleshooting
 
-## Users
+### Backend does not start
 
-| Method | Path | Description | Body/Header |
-|---|---|---|---|
-| GET | `/users` | Get all users | None |
-| GET | `/users/:id` | Get user by ID | None |
-| POST | `/users` | Create user | Body + `x-user-role: admin` |
-| PUT | `/users/:id` | Update user | Body + `x-user-role: admin` or `manager` |
-| DELETE | `/users/:id` | Delete user | `x-user-role: admin` |
+Check that:
 
-### POST /users Body
-
-```json
-{
-  "username": "lina22",
-  "firstName": "Lina",
-  "lastName": "Cohen",
-  "email": "lina@email.com",
-  "password": "123456",
-  "userRole": "user"
-}
-```
+* MySQL is running.
+* The `.env` file exists inside the backend folder.
+* The database name, username, and password are correct.
+* Dependencies were installed with `npm install`.
 
 ---
 
-## Trips
+### Frontend does not start
 
-| Method | Path | Description | Body/Header |
-|---|---|---|---|
-| GET | `/trips` | Get all trips | Optional query params |
-| GET | `/trips/:id` | Get trip by ID | None |
-| POST | `/trips` | Create trip | Body + `x-user-role: user/admin/manager` |
-| PUT | `/trips/:id` | Update trip | Body + `x-user-role: admin` or `manager` |
-| DELETE | `/trips/:id` | Delete trip | `x-user-role: admin` |
+Check that:
 
-### Trip Query Params
-
-```txt
-/trips?destination=Japan
-/trips?status=planned
-/trips?name=food
-```
-
-### POST /trips Body
-
-```json
-{
-  "tripName": "Rome Food Trip",
-  "destination": "Rome, Italy",
-  "startDate": "2026-07-10",
-  "endDate": "2026-07-14",
-  "description": "A relaxed trip focused on food and hidden gems.",
-  "createdBy": 1,
-  "participants": [1, 2],
-  "budget": 900,
-  "status": "planned"
-}
-```
+* You are inside the frontend folder.
+* Dependencies were installed with `npm install`.
+* The backend is also running.
 
 ---
 
-## Friends
+### AI planner does not work
 
-| Method | Path | Description | Body/Header |
-|---|---|---|---|
-| GET | `/friends` | Get all friendship records | `x-user-role: admin` or `manager` |
-| GET | `/friends/:userId` | Get friends by user ID | None |
-| POST | `/friends` | Create friendship | Body + `x-user-role: user/admin/manager` |
-| PUT | `/friends/:id` | Update friendship status | Body + `x-user-role: admin` or `manager` |
-| DELETE | `/friends/:id` | Delete friendship | `x-user-role: admin` |
+Check that:
 
-### POST /friends Body
-
-```json
-{
-  "userId": 2,
-  "friendId": 5
-}
-```
-
-### PUT /friends/:id Body
-
-```json
-{
-  "status": "accepted"
-}
-```
-
-Allowed statuses:
-
-```txt
-pending
-accepted
-blocked
-```
+* `OPENAI_API_KEY` exists in `backend/.env`.
+* The API key is valid.
+* The OpenAI account has API billing/credits.
+* The backend was restarted after editing `.env`.
 
 ---
 
-# Example Responses
+### Chat does not update live
 
-## Example Success Response
+Check that:
 
-Request:
-
-```txt
-GET /trips/1
-```
-
-Response:
-
-```json
-{
-  "success": true,
-  "data": {
-    "tripId": 1,
-    "tripName": "Japan Hidden Gems Adventure",
-    "destination": "Tokyo, Japan",
-    "status": "planned"
-  },
-  "error": null
-}
-```
-
-## Example Validation Error
-
-Request:
-
-```txt
-POST /trips
-```
-
-Body:
-
-```json
-{
-  "destination": "Paris, France"
-}
-```
-
-Response:
-
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Missing required fields.",
-    "details": {
-      "required": ["tripName", "destination", "startDate", "endDate", "budget", "status"]
-    }
-  }
-}
-```
-
-## Example Not Found Error
-
-Request:
-
-```txt
-GET /users/999
-```
-
-Response:
-
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "USER_NOT_FOUND",
-    "message": "User not found.",
-    "details": {
-      "id": 999
-    }
-  }
-}
-```
-
-## Example Forbidden Error
-
-Request without role header:
-
-```txt
-DELETE /trips/1
-```
-
-Response:
-
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "FORBIDDEN",
-    "message": "You do not have permission to perform this action.",
-    "details": {
-      "requiredHeader": "x-user-role"
-    }
-  }
-}
-```
+* Both users are logged in at the same time.
+* The users are friends.
+* The backend is running.
+* The frontend is connected to the backend.
+* The browser console does not show socket errors.
 
 ---
 
-# Postman Collection
+### Trip sharing does not appear
 
-The exported Postman collection is included at:
+Check that:
 
-```txt
-docs/postman_collection.json
-```
-
-The collection:
-
-- Uses the correct HTTP methods.
-- Includes request bodies for POST and PUT requests.
-- Includes path params such as `/users/1`, `/trips/1`, `/friends/1`.
-- Includes query params such as `/trips?destination=Japan`.
-- Uses clear request names.
-- Is organized into folders by resource:
-  - Server
-  - Users
-  - Trips
-  - Friends
-  - Error Examples
-- Works against:
-
-```txt
-http://localhost:3000
-```
-
-To use it:
-
-1. Start the server.
-2. Open Postman.
-3. Import `docs/postman_collection.json`.
-4. Send requests from the imported collection.
+* The users are friends.
+* The logged-in user is the trip owner.
+* The receiving user accepted the shared trip.
+* The page was refreshed if needed.
 
 ---
-
-# Postman Screenshots
-
-Screenshots are included in:
-
-```txt
-docs/screenshots/
-```
-
-Required screenshots:
-
-| Screenshot | Request |
-|---|---|
-| `users_success.png` | Successful Users request |
-| `trips_success.png` | Successful Trips request |
-| `friends_success.png` | Successful Friends request |
-| `validation_error.png` | Example error request |
-
-Each screenshot should show the request URL, method, response status code, and JSON response body.
-
----
-
-## Notes
-
-- Run DELETE requests last because they remove mock data during the current server session.
-- Restart the server to reset mock data.

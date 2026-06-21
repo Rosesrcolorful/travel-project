@@ -1,39 +1,404 @@
 {
   "info": {
-    "name": "Travel Backend API",
-    "description": "Postman collection for Assignment 2 Backend API using Node.js, Express, and mock data.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "_postman_id": "a2cfe35f-4eec-4b23-a94d-ee2296ef37f3",
+    "name": "TravelMate Final API Collection",
+    "description": "Final Postman collection for the TravelMate full-stack project. The backend should be running on http://localhost:3000. Most requests use the standard response format: { success, data, error }. Socket.IO live-chat behavior is demonstrated in the website/demo video, while this collection tests the REST API routes.\n\nRoute note: auth, settings, and AI requests use /api/... because those routes are mounted with the /api prefix. Trips, friends, messages, users, and trip-shares use their direct route paths.\n\nSettings update note: the Update profile and theme request uses collection variables settingsUsername, settingsEmail, and settingsTheme. Edit those variables before running it so a user is not overwritten by hardcoded example values.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53605521"
   },
   "item": [
     {
-      "name": "Server",
+      "name": "Auth",
       "item": [
         {
-          "name": "GET Root - Server Running",
+          "name": "Signup new user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login/signup response is successful\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const user = json.data && (json.data.user || json.data);",
+                  "if (user && user.id) {",
+                  "  pm.collectionVariables.set(\"userId\", user.id);",
+                  "}",
+                  "if (user && user.email) {",
+                  "  pm.collectionVariables.set(\"currentUserEmail\", user.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Tester\",\n  \"username\": \"postman_tester\",\n  \"email\": \"postman.tester@example.com\",\n  \"password\": \"Test1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "{{baseUrl}}/",
+              "raw": "{{baseUrl}}/api/auth/signup",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                ""
+                "api",
+                "auth",
+                "signup"
               ]
             }
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login/signup response is successful\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const user = json.data && (json.data.user || json.data);",
+                  "if (user && user.id) {",
+                  "  pm.collectionVariables.set(\"userId\", user.id);",
+                  "}",
+                  "if (user && user.email) {",
+                  "  pm.collectionVariables.set(\"currentUserEmail\", user.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{currentUserEmail}}\",\n  \"password\": \"{{currentUserPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
         }
-      ]
+      ],
+      "description": "Signup, login, and logout routes."
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const user = json.data && (json.data.user || json.data);",
+                  "if (user) {",
+                  "  if (user.username) pm.collectionVariables.set(\"settingsUsername\", user.username);",
+                  "  if (user.email) pm.collectionVariables.set(\"settingsEmail\", user.email);",
+                  "  if (user.theme) pm.collectionVariables.set(\"settingsTheme\", user.theme);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/settings?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update profile and theme",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"username\": \"{{settingsUsername}}\",\n  \"email\": \"{{settingsEmail}}\",\n  \"theme\": \"{{settingsTheme}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            },
+            "description": "This request updates the selected user. Before running it, edit the collection variables settingsUsername, settingsEmail, and settingsTheme. This avoids overwriting a seeded user with hardcoded example values."
+          },
+          "response": []
+        },
+        {
+          "name": "Change password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"currentPassword\": \"{{currentUserPassword}}\",\n  \"newPassword\": \"{{newUserPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "password"
+              ]
+            },
+            "description": "Use carefully. This changes the selected user's password. Before running, set currentUserPassword and newUserPassword correctly in collection variables. After it succeeds, update currentUserPassword to the new value."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"password\": \"{{currentUserPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "account"
+              ]
+            },
+            "description": "Danger request. Deletes the selected user. Use only with a throwaway test user."
+          },
+          "response": []
+        }
+      ],
+      "description": "User profile, theme, password, and account settings. Use a test user for password/account deletion requests."
     },
     {
       "name": "Users",
       "item": [
         {
-          "name": "GET All Users",
+          "name": "Get all users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/users",
               "host": [
@@ -43,42 +408,78 @@
                 "users"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "GET User By ID",
+          "name": "Get user by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/users/1",
+              "raw": "{{baseUrl}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "users",
-                "1"
+                "{{userId}}"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "POST Create User - Admin",
+          "name": "Create user as admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "admin"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"lina22\",\n  \"firstName\": \"Lina\",\n  \"lastName\": \"Cohen\",\n  \"email\": \"lina@email.com\",\n  \"password\": \"123456\",\n  \"userRole\": \"user\"\n}"
+              "raw": "{\n  \"role\": \"admin\",\n  \"firstName\": \"AdminCreated\",\n  \"lastName\": \"User\",\n  \"username\": \"admin_created_user\",\n  \"email\": \"admin.created@example.com\",\n  \"password\": \"Test1234!\",\n  \"userRole\": \"user\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/users",
@@ -89,236 +490,130 @@
                 "users"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "PUT Update User - Manager",
+          "name": "Update user as admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "manager"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"updatedUser\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"email\": \"updated@email.com\",\n  \"password\": \"123456\",\n  \"userRole\": \"manager\"\n}"
+              "raw": "{\n  \"role\": \"admin\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"username\": \"updated_user\",\n  \"email\": \"updated.user@example.com\",\n  \"userRole\": \"user\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/users/3",
+              "raw": "{{baseUrl}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "users",
-                "3"
+                "{{userId}}"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "DELETE User - Admin",
+          "name": "Delete user as admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-role",
-                "value": "admin"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "{{baseUrl}}/users/5",
+              "raw": "{{baseUrl}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "users",
-                "5"
+                "{{userId}}"
               ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Trips",
-      "item": [
-        {
-          "name": "GET All Trips",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/trips",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips"
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET Trip By ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/trips/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips",
-                "1"
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET Trips By Destination Query",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/trips?destination=Japan",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips"
-              ],
-              "query": [
-                {
-                  "key": "destination",
-                  "value": "Japan"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET Trips By Status Query",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/trips?status=planned",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "planned"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "POST Create Trip - User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "user"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tripName\": \"Rome Food Trip\",\n  \"destination\": \"Rome, Italy\",\n  \"startDate\": \"2026-07-10\",\n  \"endDate\": \"2026-07-14\",\n  \"description\": \"A relaxed trip focused on food, hidden gems, and local neighborhoods.\",\n  \"createdBy\": 1,\n  \"participants\": [\n    1,\n    2\n  ],\n  \"budget\": 900,\n  \"status\": \"planned\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/trips",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PUT Update Trip - Manager",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "manager"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tripName\": \"Updated Japan Hidden Gems Adventure\",\n  \"destination\": \"Tokyo, Japan\",\n  \"startDate\": \"2026-07-10\",\n  \"endDate\": \"2026-07-25\",\n  \"description\": \"Updated itinerary with more hidden gems and local food recommendations.\",\n  \"createdBy\": 1,\n  \"participants\": [\n    1,\n    2,\n    3\n  ],\n  \"budget\": 13000,\n  \"status\": \"planned\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/trips/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips",
-                "1"
-              ]
-            }
-          }
-        },
-        {
-          "name": "DELETE Trip - Admin",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "x-user-role",
-                "value": "admin"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/trips/5",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "trips",
-                "5"
-              ]
-            }
-          }
+            "description": "Danger request. Use only with a throwaway test user."
+          },
+          "response": []
         }
-      ]
+      ],
+      "description": "Basic user routes. Some write routes require an admin/manager role in the request body depending on the roleCheck middleware."
     },
     {
       "name": "Friends",
       "item": [
         {
-          "name": "GET All Friends - Manager",
+          "name": "Get all friendship records",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
               {
-                "key": "x-user-role",
-                "value": "manager"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "url": {
@@ -330,42 +625,169 @@
                 "friends"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "GET Friends By User ID",
+          "name": "Search users by username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/friends/1",
+              "raw": "{{baseUrl}}/friends/search?username={{friendUsername}}&userId={{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "friends",
-                "1"
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{friendUsername}}"
+                },
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "POST Create Friendship - User",
+          "name": "Get friends by user id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/friends/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "friends",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get pending requests received by user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/friends/requests/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "friends",
+                "requests",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send friend request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Friend request response received\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const friendship = json.data && (json.data.friendship || json.data);",
+                  "if (friendship && friendship.id) {",
+                  "  pm.collectionVariables.set(\"friendshipId\", friendship.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "user"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 2,\n  \"friendId\": 5\n}"
+              "raw": "{\n  \"requesterId\": \"{{userId}}\",\n  \"addresseeId\": \"{{friendId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/friends",
@@ -376,99 +798,274 @@
                 "friends"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "PUT Update Friendship - Manager",
+          "name": "Accept friend request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "manager"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"accepted\"\n}"
+              "raw": "{\n  \"userId\": \"{{friendId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/friends/3",
+              "raw": "{{baseUrl}}/friends/{{friendshipId}}/accept",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "friends",
-                "3"
+                "{{friendshipId}}",
+                "accept"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "DELETE Friendship - Admin",
+          "name": "Decline friend request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{friendId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/friends/{{friendshipId}}/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "friends",
+                "{{friendshipId}}",
+                "decline"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update friendship status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/friends/{{friendshipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "friends",
+                "{{friendshipId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete friendship",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-role",
-                "value": "admin"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/friends/4",
+              "raw": "{{baseUrl}}/friends/{{friendshipId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "friends",
-                "4"
+                "{{friendshipId}}"
               ]
             }
-          }
+          },
+          "response": []
         }
-      ]
+      ],
+      "description": "Friend search, friend requests, accepting/declining requests, and removing friends."
     },
     {
-      "name": "Error Examples",
+      "name": "Trips",
       "item": [
         {
-          "name": "ERROR - User Not Found",
+          "name": "Get trips for current user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/users/999",
+              "raw": "{{baseUrl}}/trips?userId={{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "users",
-                "999"
+                "trips"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "ERROR - Missing Trip Fields",
+          "name": "Create trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Trip created successfully\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const trip = json.data && (json.data.trip || json.data);",
+                  "if (trip && trip.id) {",
+                  "  pm.collectionVariables.set(\"tripId\", trip.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "user"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"destination\": \"Paris, France\"\n}"
+              "raw": "{\n  \"tripName\": \"Postman Test Trip\",\n  \"destination\": \"Rome, Italy\",\n  \"startDate\": \"2026-07-10\",\n  \"endDate\": \"2026-07-14\",\n  \"budget\": 1500,\n  \"status\": \"planned\",\n  \"description\": \"A test trip created from Postman.\",\n  \"createdBy\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/trips",
@@ -479,63 +1076,617 @@
                 "trips"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "ERROR - Forbidden Delete Trip Without Role",
+          "name": "Get trip by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "DELETE",
-            "header": [],
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/trips/1",
+              "raw": "{{baseUrl}}/trips/{{tripId}}?userId={{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "trips",
-                "1"
+                "{{tripId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "ERROR - Invalid Friendship Status",
+          "name": "Update trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "x-user-role",
-                "value": "manager"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"randomStatus\"\n}"
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"tripName\": \"Updated Postman Test Trip\",\n  \"destination\": \"Rome, Italy\",\n  \"startDate\": \"2026-07-10\",\n  \"endDate\": \"2026-07-15\",\n  \"budget\": 1700,\n  \"status\": \"active\",\n  \"description\": \"Updated from Postman.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/friends/3",
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "friends",
-                "3"
+                "trips",
+                "{{tripId}}"
               ]
             }
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "Share trip with friend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Trip share response received\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const share = json.data && (json.data.tripShare || json.data.share || json.data);",
+                  "if (share && share.id) {",
+                  "  pm.collectionVariables.set(\"tripShareId\", share.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"receiverId\": \"{{friendId}}\",\n  \"note\": \"Sharing this trip from Postman.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/share",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "share"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}"
+              ]
+            },
+            "description": "Danger request. Use after finishing tests with this trip."
+          },
+          "response": []
         }
-      ]
+      ],
+      "description": "Trip CRUD and trip sharing from the trip owner."
+    },
+    {
+      "name": "Trip Shares",
+      "item": [
+        {
+          "name": "Get my trip shares",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-shares?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-shares"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get pending trip shares",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-shares/pending?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-shares",
+                "pending"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Accept trip share",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{friendId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trip-shares/{{tripShareId}}/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-shares",
+                "{{tripShareId}}",
+                "accept"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Decline trip share",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{friendId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trip-shares/{{tripShareId}}/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-shares",
+                "{{tripShareId}}",
+                "decline"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Viewing and responding to trip-share requests."
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get conversation with friend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{friendId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messages",
+                "{{friendId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send chat message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senderId\": \"{{userId}}\",\n  \"receiverId\": \"{{friendId}}\",\n  \"content\": \"Hello from Postman!\",\n  \"messageType\": \"text\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "REST endpoints for loading and sending chat messages. Live updates are handled by Socket.IO in the frontend."
+    },
+    {
+      "name": "AI Trip Planner",
+      "item": [
+        {
+          "name": "Generate AI trip plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Response has standard success field\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Plan a 4-day budget trip to Rome for two friends who like museums, food, walking tours, and vintage shopping.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/trip-plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ai",
+                "trip-plan"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "AI trip recommendation route. Requires OPENAI_API_KEY in backend/.env and API billing/credits."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const userId = pm.collectionVariables.get(\"userId\");",
+          "",
+          "if (userId) {",
+          "  pm.request.headers.upsert({",
+          "    key: \"x-user-id\",",
+          "    value: userId",
+          "  });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
     }
   ],
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000",
-      "type": "string"
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "userId",
+      "value": "6"
+    },
+    {
+      "key": "friendId",
+      "value": "3"
+    },
+    {
+      "key": "friendUsername",
+      "value": "yossi77"
+    },
+    {
+      "key": "friendshipId",
+      "value": "5"
+    },
+    {
+      "key": "tripId",
+      "value": "8"
+    },
+    {
+      "key": "tripShareId",
+      "value": "2"
+    },
+    {
+      "key": "currentUserEmail",
+      "value": "redfuggler@gmail.com"
+    },
+    {
+      "key": "currentUserPassword",
+      "value": "123456"
+    },
+    {
+      "key": "newUserPassword",
+      "value": "RedFuggler123!"
+    },
+    {
+      "key": "settingsUsername",
+      "value": "Red_Fuggly"
+    },
+    {
+      "key": "settingsEmail",
+      "value": "redfuggler@gmail.com"
+    },
+    {
+      "key": "settingsTheme",
+      "value": "travel"
     }
   ]
 }

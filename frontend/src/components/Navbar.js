@@ -41,6 +41,9 @@ function Navbar({ userId, onLogout }) {
 
       <div className="nav-links">
         <NavLink to="/dashboard">Dashboard</NavLink>
+        <NavLink to="/plan-trip">Plan Trip</NavLink>
+        <NavLink to="/trips">My Trips</NavLink>
+        <NavLink to="/friends">Friends</NavLink>
         <NavLink to="/settings">Settings</NavLink>
       </div>
 

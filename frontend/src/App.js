@@ -1,9 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
+import TripsPage from "./pages/TripsPage";
+import TripFormPage from "./pages/TripFormPage";
 import SettingsPage from "./pages/SettingsPage";
+import FriendsPage from "./pages/FriendsPage";
+import PlanTripPage from "./pages/PlanTripPage";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -14,13 +19,33 @@ function App() {
   const savedUserId = localStorage.getItem("userId");
   const [userId, setUserId] = useState(savedUserId);
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme) {
+      document.body.className = `theme-${savedTheme}`;
+    } else {
+      document.body.className = "theme-light";
+    }
+  }, []);
+
   const handleLogin = (loggedInUser) => {
     localStorage.setItem("userId", loggedInUser.userId);
+
+    if (loggedInUser.theme) {
+      localStorage.setItem("theme", loggedInUser.theme);
+      document.body.className = `theme-${loggedInUser.theme}`;
+    } else {
+      document.body.className = "theme-light";
+    }
+
     setUserId(loggedInUser.userId);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("userId");
+    localStorage.removeItem("theme");
+    document.body.className = "theme-light";
     setUserId(null);
   };
 
@@ -31,6 +56,17 @@ function App() {
 
         <main className="main-content">
           <Routes>
+            <Route
+              path="/signup"
+              element={
+                userId ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <SignupPage onSignup={handleLogin} />
+                )
+              }
+            />
+
             <Route
               path="/login"
               element={
@@ -54,10 +90,54 @@ function App() {
             />
 
             <Route
+              path="/trips"
+              element={
+                userId ? (
+                  <TripsPage userId={userId} />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/trips/new"
+              element={
+                userId ? (
+                  <TripFormPage userId={userId} />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/trips/:tripId/edit"
+              element={
+                userId ? (
+                  <TripFormPage userId={userId} />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
               path="/settings"
               element={
                 userId ? (
-                  <SettingsPage userId={userId} />
+                  <SettingsPage userId={userId} onAccountDeleted={handleLogout} />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/friends"
+              element={
+                userId ? (
+                  <FriendsPage userId={userId} />
                 ) : (
                   <Navigate to="/login" />
                 )
@@ -69,6 +149,17 @@ function App() {
               element={
                 userId ? (
                   <Navigate to="/dashboard" />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/plan-trip"
+              element={
+                userId ? (
+                  <PlanTripPage userId={userId} />
                 ) : (
                   <Navigate to="/login" />
                 )

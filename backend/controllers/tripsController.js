@@ -1,286 +1,429 @@
-const trips = require('../models/tripsMock');
+const { Op } = require("sequelize");
+const { Trip, User, TripParticipant } = require("../models");
 
-/**
- * Helper function for checking if an id param is valid.
- */
-const isValidId = (id) => {
-  return !isNaN(id) && Number.isInteger(id) && id > 0;
-};
+const validStatuses = ["planned", "active", "completed", "cancelled"];
 
-/**
- * @desc Get all trips
- * @route GET /trips
- * @access Public
- *
- * Optional query params:
- * destination, status, name
- */
-exports.getAllTrips = (req, res) => {
-  const { destination, status, name, userId } = req.query;
+const userAttributes = ["userId", "username", "firstName", "lastName", "email"];
 
-  let filteredTrips = trips;
+function sendSuccess(res, statusCode, data) {
+  return res.status(statusCode).json({
+    success: true,
+    data,
+    error: null
+  });
+}
 
-  if (userId) {
-  const numericUserId = Number(userId);
+function sendError(res, statusCode, code, message, details = {}) {
+  return res.status(statusCode).json({
+    success: false,
+    data: null,
+    error: {
+      code,
+      message,
+      details
+    }
+  });
+}
 
-  filteredTrips = filteredTrips.filter(
-    (trip) =>
-      trip.createdBy === numericUserId ||
-      trip.participants.includes(numericUserId)
+function isValidId(id) {
+  return Number.isInteger(id) && id > 0;
+}
+
+function getCurrentUserId(req) {
+  return Number(req.header("x-user-id") || req.query.userId || req.body.userId);
+}
+
+function hasMissingTripFields(tripData) {
+  return (
+    !tripData.tripName ||
+    !tripData.destination ||
+    !tripData.startDate ||
+    !tripData.endDate ||
+    tripData.budget === undefined ||
+    tripData.budget === null ||
+    tripData.budget === ""
   );
 }
 
-  if (destination) {
-    filteredTrips = filteredTrips.filter((trip) =>
-      trip.destination.toLowerCase().includes(destination.toLowerCase())
-    );
-  }
+function validateTripDates(startDate, endDate) {
+  return new Date(startDate) <= new Date(endDate);
+}
 
-  if (status) {
-    filteredTrips = filteredTrips.filter((trip) =>
-      trip.status.toLowerCase() === status.toLowerCase()
-    );
-  }
+function validateBudget(budget) {
+  const numericBudget = Number(budget);
+  return !Number.isNaN(numericBudget) && numericBudget >= 0;
+}
 
-  if (name) {
-    filteredTrips = filteredTrips.filter((trip) =>
-      trip.tripName.toLowerCase().includes(name.toLowerCase())
-    );
-  }
-
-  res.status(200).json({
-    success: true,
-    data: filteredTrips,
-    error: null
-  });
-};
-
-/**
- * @desc Get trip by ID
- * @route GET /trips/:id
- * @access Public
- */
-exports.getTripById = (req, res) => {
-  const id = Number(req.params.id);
-
-  if (!isValidId(id)) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Invalid trip id.',
-        details: {
-          id: req.params.id
-        }
-      }
-    });
-  }
-
-  const trip = trips.find((t) => t.tripId === id);
-
-  if (!trip) {
-    return res.status(404).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'TRIP_NOT_FOUND',
-        message: 'Trip not found.',
-        details: { id }
-      }
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    data: trip,
-    error: null
-  });
-};
-
-/**
- * @desc Create new trip
- * @route POST /trips
- * @access Admin, manager, and user
- */
-exports.createTrip = (req, res) => {
-  const {
-    tripName,
-    destination,
-    startDate,
-    endDate,
-    description,
-    createdBy,
-    participants,
-    budget,
-    status
-  } = req.body;
-
-  if (!tripName || !destination || !startDate || !endDate || !budget || !status) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Missing required fields.',
-        details: {
-          required: ['tripName', 'destination', 'startDate', 'endDate', 'budget', 'status']
-        }
-      }
-    });
-  }
-
-  const newTrip = {
-    tripId: trips.length > 0 ? Math.max(...trips.map((t) => t.tripId)) + 1 : 1,
-    tripName,
-    destination,
-    startDate,
-    endDate,
-    description: description || '',
-    createdBy: createdBy || null,
-    participants: participants || [],
-    budget,
-    status,
-    createDate: new Date().toISOString(),
-    updateDate: new Date().toISOString()
-  };
-
-  trips.push(newTrip);
-
-  res.status(201).json({
-    success: true,
-    data: {
-      tripId: newTrip.tripId
+function tripInclude() {
+  return [
+    {
+      model: User,
+      as: "creator",
+      attributes: userAttributes
     },
-    error: null
+    {
+      model: User,
+      as: "participants",
+      attributes: userAttributes,
+      through: {
+        attributes: ["participantRole"]
+      }
+    }
+  ];
+}
+
+async function loadTripWithRelations(tripId) {
+  return Trip.findByPk(tripId, {
+    include: tripInclude()
   });
+}
+
+async function userCanManageTrip(userId, trip) {
+  if (!isValidId(userId)) {
+    return false;
+  }
+
+  if (trip.createdBy === userId) {
+    return true;
+  }
+
+  const ownerRecord = await TripParticipant.findOne({
+    where: {
+      userId,
+      tripId: trip.tripId,
+      participantRole: "owner"
+    }
+  });
+
+  return Boolean(ownerRecord);
+}
+
+function userCanSeeTrip(userId, tripJson) {
+  if (!isValidId(userId)) {
+    return true;
+  }
+
+  return (
+    tripJson.createdBy === userId ||
+    tripJson.participants.some((participant) => participant.userId === userId)
+  );
+}
+
+/**
+ * @desc Get trips, optionally filtered by destination/status/name/userId
+ * @route GET /trips
+ */
+exports.getAllTrips = async (req, res) => {
+  try {
+    const { destination, status, name } = req.query;
+    const currentUserId = getCurrentUserId(req);
+
+    const where = {};
+
+    if (destination) {
+      where.destination = { [Op.like]: `%${destination}%` };
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (name) {
+      where.tripName = { [Op.like]: `%${name}%` };
+    }
+
+    let trips = await Trip.findAll({
+      where,
+      include: tripInclude(),
+      order: [["startDate", "ASC"]]
+    });
+
+    if (isValidId(currentUserId)) {
+      trips = trips.filter((trip) => userCanSeeTrip(currentUserId, trip.toJSON()));
+    }
+
+    return sendSuccess(res, 200, trips);
+  } catch (error) {
+    return sendError(res, 500, "SERVER_ERROR", "Failed to get trips.", {
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc Get one trip by ID
+ * @route GET /trips/:id
+ */
+exports.getTripById = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const currentUserId = getCurrentUserId(req);
+
+    if (!isValidId(id)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid trip id.", {
+        id: req.params.id
+      });
+    }
+
+    const trip = await loadTripWithRelations(id);
+
+    if (!trip) {
+      return sendError(res, 404, "TRIP_NOT_FOUND", "Trip not found.", { id });
+    }
+
+    const tripJson = trip.toJSON();
+
+    if (isValidId(currentUserId) && !userCanSeeTrip(currentUserId, tripJson)) {
+      return sendError(res, 403, "FORBIDDEN", "You do not have access to this trip.", {
+        tripId: id,
+        userId: currentUserId
+      });
+    }
+
+    return sendSuccess(res, 200, trip);
+  } catch (error) {
+    return sendError(res, 500, "SERVER_ERROR", "Failed to get trip.", {
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc Create a new trip
+ * @route POST /trips
+ */
+exports.createTrip = async (req, res) => {
+  try {
+    const currentUserId = getCurrentUserId(req);
+
+    const {
+      tripName,
+      destination,
+      startDate,
+      endDate,
+      description,
+      budget,
+      status = "planned",
+      participants = []
+    } = req.body;
+
+    if (!isValidId(currentUserId)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Missing or invalid current user id.", {
+        requiredHeader: "x-user-id"
+      });
+    }
+
+    if (hasMissingTripFields({ tripName, destination, startDate, endDate, budget })) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Missing required fields.", {
+        required: ["tripName", "destination", "startDate", "endDate", "budget"]
+      });
+    }
+
+    if (!validateTripDates(startDate, endDate)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Start date cannot be after end date.", {
+        startDate,
+        endDate
+      });
+    }
+
+    if (!validateBudget(budget)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Budget must be a positive number or zero.", {
+        budget
+      });
+    }
+
+    if (!validStatuses.includes(status)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid trip status.", {
+        allowedStatuses: validStatuses
+      });
+    }
+
+    const creator = await User.findByPk(currentUserId);
+
+    if (!creator) {
+      return sendError(res, 404, "USER_NOT_FOUND", "Creating user was not found.", {
+        userId: currentUserId
+      });
+    }
+
+    const newTrip = await Trip.create({
+      tripName,
+      destination,
+      startDate,
+      endDate,
+      description: description || "",
+      createdBy: currentUserId,
+      budget,
+      status
+    });
+
+    const participantIds = Array.from(
+      new Set([
+        currentUserId,
+        ...participants.map((participantId) => Number(participantId)).filter(isValidId)
+      ])
+    );
+
+    const participantRows = participantIds.map((participantId) => ({
+      userId: participantId,
+      tripId: newTrip.tripId,
+      participantRole: participantId === currentUserId ? "owner" : "member"
+    }));
+
+    await TripParticipant.bulkCreate(participantRows, {
+      ignoreDuplicates: true
+    });
+
+    const createdTrip = await loadTripWithRelations(newTrip.tripId);
+
+    return sendSuccess(res, 201, createdTrip);
+  } catch (error) {
+    return sendError(res, 500, "SERVER_ERROR", "Failed to create trip.", {
+      error: error.message
+    });
+  }
 };
 
 /**
  * @desc Update trip by ID
  * @route PUT /trips/:id
- * @access Admin and manager only
  */
-exports.updateTrip = (req, res) => {
-  const id = Number(req.params.id);
+exports.updateTrip = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const currentUserId = getCurrentUserId(req);
 
-  const {
-    tripName,
-    destination,
-    startDate,
-    endDate,
-    description,
-    createdBy,
-    participants,
-    budget,
-    status
-  } = req.body;
+    const {
+      tripName,
+      destination,
+      startDate,
+      endDate,
+      description,
+      budget,
+      status
+    } = req.body;
 
-  if (!isValidId(id)) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Invalid trip id.',
-        details: {
-          id: req.params.id
-        }
-      }
+    if (!isValidId(id)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid trip id.", {
+        id: req.params.id
+      });
+    }
+
+    if (!isValidId(currentUserId)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Missing or invalid current user id.", {
+        requiredHeader: "x-user-id"
+      });
+    }
+
+    const trip = await Trip.findByPk(id);
+
+    if (!trip) {
+      return sendError(res, 404, "TRIP_NOT_FOUND", "Trip not found.", { id });
+    }
+
+    const canManage = await userCanManageTrip(currentUserId, trip);
+
+    if (!canManage) {
+      return sendError(res, 403, "FORBIDDEN", "Only the trip owner can edit this trip.", {
+        tripId: id,
+        userId: currentUserId
+      });
+    }
+
+    if (hasMissingTripFields({ tripName, destination, startDate, endDate, budget })) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Missing required fields.", {
+        required: ["tripName", "destination", "startDate", "endDate", "budget"]
+      });
+    }
+
+    if (!validateTripDates(startDate, endDate)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Start date cannot be after end date.", {
+        startDate,
+        endDate
+      });
+    }
+
+    if (!validateBudget(budget)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Budget must be a positive number or zero.", {
+        budget
+      });
+    }
+
+    if (!validStatuses.includes(status)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid trip status.", {
+        allowedStatuses: validStatuses
+      });
+    }
+
+    await trip.update({
+      tripName,
+      destination,
+      startDate,
+      endDate,
+      description: description || "",
+      budget,
+      status
+    });
+
+    const updatedTrip = await loadTripWithRelations(id);
+
+    return sendSuccess(res, 200, updatedTrip);
+  } catch (error) {
+    return sendError(res, 500, "SERVER_ERROR", "Failed to update trip.", {
+      error: error.message
     });
   }
-
-  const trip = trips.find((t) => t.tripId === id);
-
-  if (!trip) {
-    return res.status(404).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'TRIP_NOT_FOUND',
-        message: 'Trip not found.',
-        details: { id }
-      }
-    });
-  }
-
-  if (!tripName || !destination || !startDate || !endDate || !budget || !status) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Missing required fields.',
-        details: {
-          required: ['tripName', 'destination', 'startDate', 'endDate', 'budget', 'status']
-        }
-      }
-    });
-  }
-
-  trip.tripName = tripName;
-  trip.destination = destination;
-  trip.startDate = startDate;
-  trip.endDate = endDate;
-  trip.description = description || trip.description || '';
-  trip.createdBy = createdBy || trip.createdBy || null;
-  trip.participants = participants || trip.participants || [];
-  trip.budget = budget;
-  trip.status = status;
-  trip.updateDate = new Date().toISOString();
-
-  res.status(200).json({
-    success: true,
-    data: {
-      tripId: trip.tripId
-    },
-    error: null
-  });
 };
 
 /**
  * @desc Delete trip by ID
  * @route DELETE /trips/:id
- * @access Admin only
  */
-exports.deleteTrip = (req, res) => {
-  const id = Number(req.params.id);
+exports.deleteTrip = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const currentUserId = getCurrentUserId(req);
 
-  if (!isValidId(id)) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Invalid trip id.',
-        details: {
-          id: req.params.id
-        }
-      }
+    if (!isValidId(id)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid trip id.", {
+        id: req.params.id
+      });
+    }
+
+    if (!isValidId(currentUserId)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Missing or invalid current user id.", {
+        requiredHeader: "x-user-id"
+      });
+    }
+
+    const trip = await Trip.findByPk(id);
+
+    if (!trip) {
+      return sendError(res, 404, "TRIP_NOT_FOUND", "Trip not found.", { id });
+    }
+
+    const canManage = await userCanManageTrip(currentUserId, trip);
+
+    if (!canManage) {
+      return sendError(res, 403, "FORBIDDEN", "Only the trip owner can delete this trip.", {
+        tripId: id,
+        userId: currentUserId
+      });
+    }
+
+    await TripParticipant.destroy({
+      where: { tripId: id }
+    });
+
+    await trip.destroy();
+
+    return sendSuccess(res, 200, {
+      tripId: id,
+      deleted: true
+    });
+  } catch (error) {
+    return sendError(res, 500, "SERVER_ERROR", "Failed to delete trip.", {
+      error: error.message
     });
   }
-
-  const tripIndex = trips.findIndex((t) => t.tripId === id);
-
-  if (tripIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      data: null,
-      error: {
-        code: 'TRIP_NOT_FOUND',
-        message: 'Trip not found.',
-        details: { id }
-      }
-    });
-  }
-
-  const deletedTrip = trips.splice(tripIndex, 1)[0];
-
-  res.status(200).json({
-    success: true,
-    data: {
-      tripId: deletedTrip.tripId
-    },
-    error: null
-  });
 };
