@@ -782,7 +782,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"requesterId\": \"{{userId}}\",\n  \"addresseeId\": \"{{friendId}}\"\n}",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"friendId\": \"{{friendId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
