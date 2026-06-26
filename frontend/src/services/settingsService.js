@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL =   process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
 
 export async function getSettings(userId) {
   const response = await fetch(`${API_BASE_URL}/api/settings`, {
